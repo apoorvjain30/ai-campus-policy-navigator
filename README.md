@@ -26,7 +26,6 @@ Navigate to the backend directory and spin up the FastAPI server:
 
 Bash
 cd backend
-venv\scripts\activates
 uvicorn main:app --reload
 (The server will start running at http://127.0.0.1:8000)
 
