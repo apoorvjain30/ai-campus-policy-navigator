@@ -25,6 +25,7 @@ Before running the app, you must install the Python dependencies and set the API
 ### Running the App
 1. **Start the Backend:** ```bash
    cd backend
+   venv\scripts\activate
    uvicorn main:app --reload
    ```
 2. **Open the Frontend:** Open `frontend/index.html` in any modern web browser.
