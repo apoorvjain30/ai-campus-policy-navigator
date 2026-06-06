@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Campus Policy Navigator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    header .logo { font-size: 2rem; }
+    header h1 { font-size: 1.5rem; font-weight: 700; color: white; }
+    header p { font-size: 0.85rem; color: #93c5fd; margin-top: 2px; }
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logout-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 7px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      display: none;
+    }
+    .logout-btn:hover { background: rgba(255,255,255,0.2); }
+
+    /* ── Container ── */
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    /* ── Login Gate ── */
+    #loginGate {
+      max-width: 420px;
+      margin: 80px auto;
+      background: #1e293b;
+      border-radius: 20px;
+      padding: 40px;
+      border: 1px solid #334155;
+      text-align: center;
+    }
+    #loginGate .lock-icon { font-size: 3rem; margin-bottom: 16px; }
+    #loginGate h2 { font-size: 1.4rem; color: #e2e8f0; margin-bottom: 8px; }
+    #loginGate p { color: #64748b; font-size: 0.88rem; margin-bottom: 24px; }
+    #passwordInput {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 13px 16px;
+      color: #e2e8f0;
+      font-size: 1rem;
+      margin-bottom: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+      text-align: center;
+      letter-spacing: 0.1em;
+    }
+    #passwordInput:focus { border-color: #3b82f6; }
+
+    /* ── Main App (hidden until login) ── */
+    #mainApp { display: none; }
+
+    /* ── Stats Row ── */
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      flex: 1;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: #3b82f6; }
+    .stat-card .number {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #60a5fa;
+    }
+    .stat-card .label {
+      font-size: 0.72rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+      border: 1px solid #334155;
+    }
+    .card h2 {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #60a5fa;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Upload Zone ── */
+    .upload-zone {
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .upload-zone:hover { border-color: #3b82f6; background: #1a2744; }
+    .upload-zone.dragover { border-color: #60a5fa; background: #172554; }
+    .upload-zone p { color: #94a3b8; font-size: 0.9rem; margin-top: 8px; }
+    #fileInput { display: none; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-block;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+    .btn-primary:disabled { background: #1e3a5f; color: #4b5563; cursor: not-allowed; transform: none; }
+    .btn-full { width: 100%; padding: 13px; font-size: 1rem; }
+    .btn-sm { padding: 5px 12px; font-size: 0.78rem; border-radius: 6px; }
+    .btn-danger { background: #7f1d1d; color: #fca5a5; }
+    .btn-danger:hover { background: #991b1b; }
+
+    /* ── Policy List ── */
+    #policyList { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; }
+    .policy-tag {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #0f2040;
+      border: 1px solid #1e40af;
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 0.82rem;
+      animation: fadeIn 0.3s ease;
+    }
+    .policy-tag span { color: #93c5fd; }
+
+    /* ── Ask Section ── */
+    .ask-row { display: flex; gap: 12px; }
+    #questionInput {
+      flex: 1;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 1rem;
+      color: #e2e8f0;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #questionInput:focus { border-color: #3b82f6; }
+    #questionInput::placeholder { color: #475569; }
+
+    /* ── Suggested Questions ── */
+    .suggestions {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .suggestion-chip {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .suggestion-chip:hover { border-color: #3b82f6; color: #60a5fa; background: #1a2744; }
+
+    /* ── Answer Card ── */
+    #answerSection { display: none; }
+    .answer-card {
+      background: linear-gradient(135deg, #0c1f3f, #0f172a);
+      border: 1px solid #1d4ed8;
+      border-radius: 16px;
+      padding: 28px;
+      animation: fadeIn 0.4s ease;
+    }
+    .answer-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .confidence-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .conf-high { background: #14532d; color: #86efac; }
+    .conf-medium { background: #713f12; color: #fcd34d; }
+    .conf-low { background: #450a0a; color: #fca5a5; }
+
+    .answer-text {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: #e2e8f0;
+      margin-bottom: 20px;
+      background: #0f172a55;
+      padding: 16px 20px;
+      border-radius: 10px;
+      border-left: 4px solid #3b82f6;
+    }
+    .citation {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #1e3a8a;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      color: #93c5fd;
+    }
+    .related-section {
+      margin-top: 20px;
+      border-top: 1px solid #1e293b;
+      padding-top: 16px;
+    }
+    .related-section h4 {
+      font-size: 0.78rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+    .related-item {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      font-size: 0.82rem;
+      color: #94a3b8;
+      border-left: 3px solid #334155;
+      transition: border-color 0.2s;
+    }
+    .related-item:hover { border-left-color: #3b82f6; }
+    .related-item strong { color: #60a5fa; display: block; margin-bottom: 4px; }
+
+    /* ── Loader ── */
+    .loader {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #60a5fa;
+      font-size: 0.9rem;
+      padding: 16px 0;
+    }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid #1e3a8a;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* ── History ── */
+    #historySection { display: none; }
+    .history-item {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      border: 1px solid #1e293b;
+      transition: all 0.2s;
+      font-size: 0.88rem;
+    }
+    .history-item:hover { border-color: #3b82f6; background: #1a2744; }
+    .history-item .q { color: #e2e8f0; margin-bottom: 4px; }
+    .history-item .a { color: #64748b; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── Status Bar ── */
+    .status-bar {
+      text-align: center;
+      padding: 12px;
+      font-size: 0.78rem;
+      color: #475569;
+      margin-top: 8px;
+    }
+    .dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      margin-right: 6px;
+      animation: pulse 2s infinite;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 30px; right: 30px;
+      background: #1e3a8a;
+      color: white;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      z-index: 999;
+      animation: slideIn 0.3s ease;
+      max-width: 320px;
+    }
+    .toast.error { background: #7f1d1d; }
+    .toast.success { background: #14532d; }
+
+    /* ── Animations ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      header { padding: 16px 20px; }
+      header h1 { font-size: 1.1rem; }
+      .stats-row { flex-direction: column; gap: 10px; }
+      .ask-row { flex-direction: column; }
+      .container { margin: 20px auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="logo">🏛️</div>
+  <div>
+    <h1>AI Campus Policy Navigator</h1>
+    <p>Instant answers from official campus policy documents</p>
+  </div>
+  <div class="header-right">
+    <span id="adminBadge" style="display:none; background:rgba(255,255,255,0.15); padding:5px 12px; border-radius:20px; font-size:0.78rem; color:#bfdbfe;">
+      🔐 Admin
+    </span>
+    <button class="logout-btn" id="logoutBtn" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<!-- ── Login Gate ── -->
+<div id="loginGate">
+  <div class="lock-icon">🔐</div>
+  <h2>Admin Login</h2>
+  <p>Enter the admin password to upload and manage policy documents</p>
+  <input
+    type="password"
+    id="passwordInput"
+    placeholder="Enter password"
+    onkeydown="if(event.key==='Enter') doLogin()"
+  />
+  <button class="btn btn-primary btn-full" onclick="doLogin()">Login</button>
+  <p style="margin-top:16px; font-size:0.78rem; color:#334155;">
+    Students can ask questions without logging in →
+    <span style="color:#3b82f6; cursor:pointer;" onclick="skipToStudent()">Continue as Student</span>
+  </p>
+</div>
+
+<!-- ── Main App ── -->
+<div id="mainApp">
+  <div class="container">
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="number" id="statDocs">0</div>
+        <div class="label">Documents</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" id="statPages">0</div>
+        <div class="label">Pages Indexed</div>
+      </div>
+      <div class="stat-card">
+        <div class="number" id="statQueries">0</div>
+        <div class="label">Queries Asked</div>
+      </div>
+    </div>
+
+    <!-- Upload Card (only visible when admin) -->
+    <div class="card" id="uploadCard" style="display:none;">
+      <h2>📄 Upload Policy Documents</h2>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div style="font-size:2.5rem">📑</div>
+        <p>Click or drag & drop PDF policy documents here</p>
+        <p style="font-size:0.75rem; color:#475569; margin-top:6px">
+          Hostel rules, exam policies, fee structure, attendance rules, etc.
+        </p>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf" multiple />
+      <div id="policyList"></div>
+    </div>
+
+    <!-- Ask Card -->
+    <div class="card">
+      <h2>🤖 Ask a Policy Question</h2>
+      <div class="ask-row">
+        <input
+          type="text"
+          id="questionInput"
+          placeholder="e.g. What is the fine for late fee payment?"
+          onkeydown="if(event.key==='Enter') askQuestion()"
+        />
+        <button class="btn btn-primary" onclick="askQuestion()" id="askBtn">Ask AI</button>
+      </div>
+
+      <!-- Suggested questions -->
+      <div class="suggestions">
+        <span class="suggestion-chip" onclick="fillQuestion(this)">What is the hostel curfew time?</span>
+        <span class="suggestion-chip" onclick="fillQuestion(this)">What is the late fee fine?</span>
+        <span class="suggestion-chip" onclick="fillQuestion(this)">How many leaves are allowed?</span>
+        <span class="suggestion-chip" onclick="fillQuestion(this)">What are exam eligibility criteria?</span>
+      </div>
+
+      <div id="loader" style="display:none" class="loader">
+        <div class="spinner"></div>
+        <span id="loaderText">Searching through policy documents...</span>
+      </div>
+    </div>
+
+    <!-- Answer Section -->
+    <div id="answerSection">
+      <div class="answer-card" id="answerCard"></div>
+    </div>
+
+    <!-- History Section -->
+    <div id="historySection" class="card">
+      <h2>🕓 Recent Questions</h2>
+      <div id="historyList"></div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span class="dot"></span>
+      Connected · Backend: <span id="backendUrl">http://localhost:8000</span>
+      &nbsp;|&nbsp;
+      Powered by LLaMA 3.3 70B via Groq
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const API = "http://localhost:8000";
+  let isAdmin = false;
+  let queryCount = 0;
+  let questionHistory = [];
+
+  // ── Login ───────────────────────────────────────────────────────────────────
+  async function doLogin() {
+    const password = document.getElementById("passwordInput").value.trim();
+    if (!password) { showToast("Please enter password", true); return; }
+
+    try {
+      const res = await fetch(`${API}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        isAdmin = true;
+        showMainApp(true);
+        showToast("✅ Logged in as Admin!", false, "success");
+      } else {
+        showToast("Wrong password!", true);
+      }
+    } catch (e) {
+      showToast("Could not connect to server. Is the backend running?", true);
+    }
+  }
+
+  function skipToStudent() {
+    isAdmin = false;
+    showMainApp(false);
+  }
+
+  function showMainApp(adminMode) {
+    document.getElementById("loginGate").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
+
+    if (adminMode) {
+      document.getElementById("uploadCard").style.display = "block";
+      document.getElementById("adminBadge").style.display = "inline-block";
+      document.getElementById("logoutBtn").style.display = "inline-block";
+    }
+
+    refreshPolicies();
+  }
+
+  function logout() {
+    isAdmin = false;
+    document.getElementById("loginGate").style.display = "block";
+    document.getElementById("mainApp").style.display = "none";
+    document.getElementById("uploadCard").style.display = "none";
+    document.getElementById("adminBadge").style.display = "none";
+    document.getElementById("logoutBtn").style.display = "none";
+    document.getElementById("passwordInput").value = "";
+    showToast("Logged out successfully");
+  }
+
+  // ── Upload ──────────────────────────────────────────────────────────────────
+  const uploadZone = document.getElementById("uploadZone");
+
+  uploadZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    uploadZone.classList.add("dragover");
+  });
+  uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("dragover"));
+  uploadZone.addEventListener("drop", e => {
+    e.preventDefault();
+    uploadZone.classList.remove("dragover");
+    [...e.dataTransfer.files].forEach(uploadFile);
+  });
+
+  document.getElementById("fileInput").addEventListener("change", e => {
+    [...e.target.files].forEach(uploadFile);
+    e.target.value = ""; // reset so same file can be re-uploaded
+  });
+
+  async function uploadFile(file) {
+    if (!file.name.endsWith(".pdf")) {
+      showToast("Only PDF files allowed!", true);
+      return;
+    }
+
+    showToast(`⏳ Uploading ${file.name}...`);
+    const form = new FormData();
+    form.append("file", file);
+
+    try {
+      const res = await fetch(`${API}/upload`, { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail);
+      showToast(`✅ Uploaded: ${file.name} (${data.pages_extracted} pages)`, false, "success");
+      refreshPolicies();
+    } catch (e) {
+      showToast(`Upload failed: ${e.message}`, true);
+    }
+  }
+
+  async function refreshPolicies() {
+    try {
+      const res = await fetch(`${API}/policies`);
+      const data = await res.json();
+
+      // Update stats
+      document.getElementById("statDocs").textContent = data.total_documents;
+      document.getElementById("statPages").textContent = data.total_pages || 0;
+
+      // Update policy list
+      const list = document.getElementById("policyList");
+      if (data.policies.length === 0) {
+        list.innerHTML = `<p style="color:#475569; font-size:0.85rem; margin-top:12px;">No documents uploaded yet.</p>`;
+        return;
+      }
+      list.innerHTML = data.policies.map(p => `
+        <div class="policy-tag">
+          <span>📄 ${p.filename}</span>
+          <span style="color:#475569">${p.pages} pages</span>
+          ${isAdmin ? `<button class="btn btn-danger btn-sm" onclick="deletePolicy('${p.filename}')">✕</button>` : ""}
+        </div>
+      `).join("");
+    } catch (e) {
+      // Server might not be reachable
+    }
+  }
+
+  async function deletePolicy(filename) {
+    if (!confirm(`Remove "${filename}"?`)) return;
+    try {
+      await fetch(`${API}/policies/${encodeURIComponent(filename)}`, { method: "DELETE" });
+      showToast(`🗑️ Removed: ${filename}`);
+      refreshPolicies();
+    } catch (e) {
+      showToast("Failed to delete", true);
+    }
+  }
+
+  // ── Ask ─────────────────────────────────────────────────────────────────────
+  function fillQuestion(el) {
+    document.getElementById("questionInput").value = el.textContent;
+    document.getElementById("questionInput").focus();
+  }
+
+  async function askQuestion() {
+    const question = document.getElementById("questionInput").value.trim();
+    if (!question) { showToast("Please type a question first!", true); return; }
+
+    // Update UI
+    document.getElementById("loader").style.display = "flex";
+    document.getElementById("answerSection").style.display = "none";
+    document.getElementById("askBtn").disabled = true;
+
+    // Animate loader text
+    const loaderTexts = [
+      "Searching through policy documents...",
+      "Analyzing relevant sections...",
+      "Generating your answer..."
+    ];
+    let ltIndex = 0;
+    const ltInterval = setInterval(() => {
+      ltIndex = (ltIndex + 1) % loaderTexts.length;
+      document.getElementById("loaderText").textContent = loaderTexts[ltIndex];
+    }, 1500);
+
+    try {
+      const res = await fetch(`${API}/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, top_k: 5 })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail);
+
+      // Update query count
+      queryCount++;
+      document.getElementById("statQueries").textContent = queryCount;
+
+      renderAnswer(question, data);
+      addToHistory(question, data.answer);
+
+    } catch (e) {
+      showToast(`Error: ${e.message}`, true);
+    } finally {
+      clearInterval(ltInterval);
+      document.getElementById("loader").style.display = "none";
+      document.getElementById("askBtn").disabled = false;
+    }
+  }
+
+  function renderAnswer(question, data) {
+    const confClass = {
+      high: "conf-high",
+      medium: "conf-medium",
+      low: "conf-low"
+    }[data.confidence] || "conf-low";
+
+    const confEmoji = { high: "✅", medium: "⚠️", low: "❓" }[data.confidence] || "❓";
+
+    let relatedHtml = "";
+    if (data.related_sections && data.related_sections.length > 0) {
+      relatedHtml = `
+        <div class="related-section">
+          <h4>📚 Related Policy Sections</h4>
+          ${data.related_sections.map(r => `
+            <div class="related-item">
+              <strong>📄 ${r.source} — Page ${r.page}</strong>
+              ${r.preview}
+            </div>
+          `).join("")}
+        </div>`;
+    }
+
+    document.getElementById("answerCard").innerHTML = `
+      <div class="answer-header">
+        <span style="font-size:1.4rem">🎓</span>
+        <div style="flex:1">
+          <div style="font-size:0.75rem; color:#64748b; margin-bottom:4px;">YOUR QUESTION</div>
+          <div style="font-weight:600; color:#e2e8f0;">${question}</div>
+        </div>
+        <span class="confidence-badge ${confClass}">${confEmoji} ${data.confidence} confidence</span>
+      </div>
+
+      <div class="answer-text">${data.answer}</div>
+
+      ${data.source ? `
+        <div class="citation">
+          📌 Source: <strong>${data.source}</strong>
+          &nbsp;|&nbsp;
+          Page <strong>${data.page}</strong>
+        </div>` : ""}
+
+      ${relatedHtml}
+    `;
+
+    document.getElementById("answerSection").style.display = "block";
+    document.getElementById("answerSection").scrollIntoView({ behavior: "smooth" });
+  }
+
+  // ── History ─────────────────────────────────────────────────────────────────
+  function addToHistory(question, answer) {
+    questionHistory.unshift({ question, answer });
+    if (questionHistory.length > 5) questionHistory.pop(); // keep last 5
+
+    const section = document.getElementById("historySection");
+    const list = document.getElementById("historyList");
+
+    section.style.display = "block";
+    list.innerHTML = questionHistory.map((item, i) => `
+      <div class="history-item" onclick="refillQuestion('${item.question.replace(/'/g, "\\'")}')">
+        <div class="q">❓ ${item.question}</div>
+        <div class="a">${item.answer}</div>
+      </div>
+    `).join("");
+  }
+
+  function refillQuestion(q) {
+    document.getElementById("questionInput").value = q;
+    document.getElementById("questionInput").focus();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ── Toast ───────────────────────────────────────────────────────────────────
+  function showToast(msg, isError = false, type = "") {
+    const t = document.createElement("div");
+    t.className = `toast${isError ? " error" : type === "success" ? " success" : ""}`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+
+  // ── Init ────────────────────────────────────────────────────────────────────
+  // Check if server is reachable on load
+  fetch(`${API}/health`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.groq_configured === false) {
+        showToast("⚠️ Groq API key not set! Add it to your .env file.", true);
+      }
+    })
+    .catch(() => {
+      showToast("⚠️ Cannot connect to backend. Make sure it's running!", true);
+    });
+</script>
+</body>
+</html>

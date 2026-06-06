@@ -1,0 +1,5 @@
+.env
+venv/
+__pycache__/
+uploaded_policies/
+policy_store.json
