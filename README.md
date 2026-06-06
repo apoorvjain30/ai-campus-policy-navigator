@@ -8,20 +8,28 @@ An AI-powered Retrieval-Augmented Generation (RAG) application that allows stude
 
 ## 🧪 Quick Start for Judges (Testing Guide)
 
-To properly evaluate this project, please follow this exact workflow to see the full Admin-to-Student pipeline:
+Before running the app, you must install the Python dependencies and set the API key locally.
 
+### Environment Setup
+1. **Install Dependencies:** Open your terminal in the root folder and run:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. **Set API Key:** Create a file named `.env` in the root folder and add the following:
+   ```text
+   GROQ_API_KEY=your_provided_api_key
+   ADMIN_PASSWORD=acropolis2026
+   ```
+   *(Note: The actual Groq API key is provided privately in our hackathon submission form).*
+
+### Running the App
 1. **Start the Backend:** ```bash
    cd backend
-   venv\Scripts\activate
    uvicorn main:app --reload
    ```
-
 2. **Open the Frontend:** Open `frontend/index.html` in any modern web browser.
-
 3. **Admin Login:** Enter the secure password `acropolis2026` to unlock the admin dashboard.
-
 4. **Upload Context:** Open the `sample_documents` folder provided in this repository. Drag and drop the test PDFs into the upload zone.
-
 5. **Test the Retrieval:** Switch to the student view and ask a specific question about the document you just uploaded. The AI will extract the correct policy and cite the exact source document and page number.
 
 ## Tech Stack
